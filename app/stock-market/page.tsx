@@ -1,17 +1,17 @@
 "use client";
 import React, {useEffect, useState} from 'react';
-import {Card, Col, Row, Table} from 'antd';
+import {Card, Col, Row, Table, Typography} from 'antd';
 import {Gauge, GaugeConfig} from '@ant-design/charts';
 import axios from 'axios';
 import styles from './page.module.css';
 
+const { Title } = Typography;
 
 interface Forecast {
     confidence: string;
     source: string;
     trend: 'bullish' | 'bearish';
 }
-
 
 interface ForecastResponse {
     forecasts: Forecast[];
@@ -39,27 +39,26 @@ const ForecastPage: React.FC = () => {
             });
     }, []);
 
-
     const columns = [
         {
-            title: 'Source',
+            title: 'منبع',
             dataIndex: 'source',
             key: 'source',
         },
         {
-            title: 'Confidence',
+            title: 'اطمینان',
             dataIndex: 'confidence',
             key: 'confidence',
             render: (confidence: number) => (confidence * 100).toFixed(2) + '%',
         },
         {
-            title: 'Trend',
+            title: 'روند',
             dataIndex: 'trend',
             key: 'trend',
             render: (trend: 'bullish' | 'bearish') => (
                 <span className={trend === 'bullish' ? styles.bullish : styles.bearish}>
-          {trend.charAt(0).toUpperCase() + trend.slice(1)}
-        </span>
+                    {trend === 'bullish' ? 'صعودی' : 'نزولی'}
+                </span>
             ),
         },
     ];
@@ -68,21 +67,21 @@ const ForecastPage: React.FC = () => {
         const percentage = (target / total) * 100;
 
         if (percentage <= 20) {
-            return 'Bearish';
+            return 'نزولی';
         } else if (percentage > 20 && percentage <= 40) {
-            return 'Slightly Bearish';
+            return 'کمی نزولی';
         } else if (percentage > 40 && percentage <= 60) {
-            return 'Neutral';
+            return 'خنثی';
         } else if (percentage > 60 && percentage <= 80) {
-            return 'Slightly Bullish';
+            return 'کمی صعودی';
         } else {
-            return 'Bullish';
+            return 'صعودی';
         }
     };
 
     const gaugeConfig: GaugeConfig = {
-        width: 500,
-        height: 500,
+        width: 400,
+        height: 400,
         autoFit: true,
         data: {
             target: aggregatedConfidence * 100,
@@ -93,7 +92,7 @@ const ForecastPage: React.FC = () => {
         legend: false,
         scale: {
             color: {
-                range: ['#F4664A', '#FAAD14', '#FFD700', '#00A2FF', 'green'],
+                range: ['#F4664A', '#FAAD14', '#FFD700', '#00A2FF', '#30BF78'],
             },
         },
         style: {
@@ -101,12 +100,12 @@ const ForecastPage: React.FC = () => {
         },
     };
 
-
     return (
         <div className={styles.container}>
-            <Row gutter={[16, 16]}>
+            <Title level={2} className={styles.pageTitle}>پیش‌بینی بازار بورس ایران</Title>
+            <Row gutter={[24, 24]}>
                 <Col span={16}>
-                    <Card title="Iran Stock Market Forecast" className={styles.card}>
+                    <Card title="پیش‌بینی‌ها" className={styles.card}>
                         <Table
                             columns={columns}
                             dataSource={forecasts}
@@ -117,7 +116,7 @@ const ForecastPage: React.FC = () => {
                     </Card>
                 </Col>
                 <Col span={8}>
-                    <Card title="Aggregated Confidence" className={styles.card}>
+                    <Card title="پیش‌بینی کلی" className={styles.card}>
                         <Gauge {...gaugeConfig} />
                     </Card>
                 </Col>

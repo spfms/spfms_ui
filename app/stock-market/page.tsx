@@ -1,138 +1,129 @@
 "use client";
-import { useEffect, useState } from 'react';
-import { Card, Table, Typography, Spin } from 'antd';
-import GaugeChart from 'react-gauge-chart';
+import React, {useEffect, useState} from 'react';
+import {Card, Col, Row, Table} from 'antd';
+import {Gauge, GaugeConfig} from '@ant-design/charts';
 import axios from 'axios';
+import styles from './page.module.css';
 
-const { Title, Text } = Typography;
 
-const calculateGaugeValue = (forecasts: any[]) => {
-    if (forecasts.length === 0) return 0.5;
+interface Forecast {
+    confidence: string;
+    source: string;
+    trend: 'bullish' | 'bearish';
+}
 
-    let bullishCount = 0;
-    let bearishCount = 0;
 
-    forecasts.forEach((forecast: any) => {
-        if (forecast.market_trend === 'bullish') bullishCount++;
-        if (forecast.market_trend === 'bearish') bearishCount++;
-    });
+interface ForecastResponse {
+    forecasts: Forecast[];
+}
 
-    const total = forecasts.length;
-    const bullishRatio = bullishCount / total;
-    const bearishRatio = bearishCount / total;
-
-    if (bullishRatio > bearishRatio) return 0.5 + bullishRatio / 2;
-    if (bearishRatio > bullishRatio) return 0.5 - bearishRatio / 2;
-    return 0.5;
-};
-
-const getGaugeLabel = (forecasts: any[]) => {
-    if (forecasts.length === 0) return 'Neutral';
-
-    let bullishCount = 0;
-    let bearishCount = 0;
-
-    forecasts.forEach((forecast: any) => {
-        if (forecast.market_trend === 'bullish') bullishCount++;
-        if (forecast.market_trend === 'bearish') bearishCount++;
-    });
-
-    const total = forecasts.length;
-    const bullishRatio = bullishCount / total;
-    const bearishRatio = bearishCount / total;
-
-    if (bullishRatio > bearishRatio) return 'Bullish';
-    if (bearishRatio > bullishRatio) return 'Bearish';
-    return 'Neutral';
-};
-
-export default function StockMarketForecast() {
-    const [gaugeValue, setGaugeValue] = useState(0.5);
-    const [forecasts, setForecasts] = useState<any[]>([]);
-    const [gaugeLabel, setGaugeLabel] = useState('Neutral');
-    const [loading, setLoading] = useState(true);
+const ForecastPage: React.FC = () => {
+    const [forecasts, setForecasts] = useState<Forecast[]>([]);
+    const [aggregatedConfidence, setAggregatedConfidence] = useState<number>(0);
 
     useEffect(() => {
-        const fetchForecasts = async () => {
-            try {
-                const response = await axios.get('https://e6f5a747-5885-41f1-b6b2-cfceb4c7eafb.mock.pstmn.io/api/stock-market-forecast');
-                const { forecasts } = response.data;
-                setForecasts(forecasts);
-                setGaugeValue(calculateGaugeValue(forecasts));
-                setGaugeLabel(getGaugeLabel(forecasts));
-            } catch (error) {
-                console.error('Error fetching forecasts:', error);
-            } finally {
-                setLoading(false);
-            }
-        };
+        axios.get<ForecastResponse>('http://127.0.0.1:5000/stock-market-predictions')
+            .then(response => {
+                const data = response.data.forecasts;
+                setForecasts(data);
 
-        fetchForecasts();
+                const bullishData = data.filter((item: Forecast) => item.trend === 'bullish');
+                const avgConfidence = bullishData.length > 0
+                    ? bullishData.reduce((acc, item) => acc + parseFloat(item.confidence), 0) / bullishData.length
+                    : 0;
+
+                setAggregatedConfidence(avgConfidence || 0);
+            })
+            .catch(error => {
+                console.error('Error fetching data:', error);
+            });
     }, []);
+
 
     const columns = [
         {
-            title: 'Agency',
-            dataIndex: 'source_agency',
-            key: 'source_agency',
+            title: 'Source',
+            dataIndex: 'source',
+            key: 'source',
+        },
+        {
+            title: 'Confidence',
+            dataIndex: 'confidence',
+            key: 'confidence',
+            render: (confidence: number) => (confidence * 100).toFixed(2) + '%',
         },
         {
             title: 'Trend',
-            dataIndex: 'market_trend',
-            key: 'market_trend',
-            render: (text: string) => (
-                <Text style={{ color: text === 'bullish' ? '#4CAF50' : text === 'bearish' ? '#F44336' : '#FFC107' }}>
-                    {text.charAt(0).toUpperCase() + text.slice(1)}
-                </Text>
+            dataIndex: 'trend',
+            key: 'trend',
+            render: (trend: 'bullish' | 'bearish') => (
+                <span className={trend === 'bullish' ? styles.bullish : styles.bearish}>
+          {trend.charAt(0).toUpperCase() + trend.slice(1)}
+        </span>
             ),
-        },
-        {
-            title: 'Confidence Score',
-            dataIndex: 'confidence_score',
-            key: 'confidence_score',
-            render: (text: number) => (
-                <Text>{text.toFixed(2)}</Text> // Format the score to 2 decimal places
-            ),
-        },
-        {
-            title: 'News',
-            dataIndex: 'news',
-            key: 'news',
         },
     ];
 
+    const getTextContent = (target: number, total: number) => {
+        const percentage = (target / total) * 100;
+
+        if (percentage <= 20) {
+            return 'Bearish';
+        } else if (percentage > 20 && percentage <= 40) {
+            return 'Slightly Bearish';
+        } else if (percentage > 40 && percentage <= 60) {
+            return 'Neutral';
+        } else if (percentage > 60 && percentage <= 80) {
+            return 'Slightly Bullish';
+        } else {
+            return 'Bullish';
+        }
+    };
+
+    const gaugeConfig: GaugeConfig = {
+        width: 500,
+        height: 500,
+        autoFit: true,
+        data: {
+            target: aggregatedConfidence * 100,
+            total: 100,
+            name: 'confidence score',
+            thresholds: [20, 40, 60, 80, 100],
+        },
+        legend: false,
+        scale: {
+            color: {
+                range: ['#F4664A', '#FAAD14', '#FFD700', '#00A2FF', 'green'],
+            },
+        },
+        style: {
+            textContent: (target: any, total: any) => getTextContent(target, total),
+        },
+    };
+
+
     return (
-        <div style={{ padding: '20px', textAlign: 'center' }}>
-            <Card
-                style={{ width: '300px', margin: '0 auto', boxShadow: '0 4px 8px rgba(0,0,0,0.1)' }}
-                title={<Title level={4}>Stock Market Forecast</Title>}
-            >
-                <GaugeChart
-                    id="stock-market-gauge"
-                    nrOfLevels={20}
-                    colors={['#FF0000', '#FFFF00', '#00FF00']}
-                    arcWidth={0.3}
-                    percent={gaugeValue}
-                    textColor="#000000"
-                />
-                <div style={{ fontSize: '16px', marginTop: '10px', fontWeight: 'bold' }}>
-                    {gaugeLabel}
-                </div>
-            </Card>
-            <div style={{ marginTop: '20px', maxWidth: '1200px', margin: '20px auto' }}>
-                {loading ? (
-                    <Spin tip="Loading..." />
-                ) : (
-                    <Card title={<Title level={4}>Forecasts from Agencies</Title>}>
+        <div className={styles.container}>
+            <Row gutter={[16, 16]}>
+                <Col span={16}>
+                    <Card title="Iran Stock Market Forecast" className={styles.card}>
                         <Table
-                            dataSource={forecasts}
                             columns={columns}
-                            rowKey="id" // Ensure each forecast has a unique 'id'
-                            pagination={{ pageSize: 10 }}
+                            dataSource={forecasts}
+                            rowKey="source"
+                            pagination={false}
+                            className={styles.table}
                         />
                     </Card>
-                )}
-            </div>
+                </Col>
+                <Col span={8}>
+                    <Card title="Aggregated Confidence" className={styles.card}>
+                        <Gauge {...gaugeConfig} />
+                    </Card>
+                </Col>
+            </Row>
         </div>
     );
-}
+};
+
+export default ForecastPage;

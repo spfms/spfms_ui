@@ -1,11 +1,11 @@
 "use client";
-import React, { useEffect, useState } from "react";
-import { Button, Input, message, Select, Spin, Table } from "antd";
+import React, {useEffect, useState} from "react";
+import {Button, Input, message, Select, Spin, Table} from "antd";
 import axios from "axios";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ScatterChart, Scatter } from "recharts";
-import type { ColumnsType } from "antd/lib/table";
+import {CartesianGrid, Line, LineChart, Scatter, ScatterChart, Tooltip, XAxis, YAxis} from "recharts";
+import type {ColumnsType} from "antd/lib/table";
+import styles from './page.module.css';
 
-// TypeScript types for the data
 interface InvestedAmountType {
     [key: string]: number;
 }
@@ -41,7 +41,6 @@ export default function PortfolioManagement() {
     const [result, setResult] = useState<PortfolioResultType | null>(null);
     const [loading, setLoading] = useState<boolean>(false);
 
-    // Fetch tickers when the component is loaded
     useEffect(() => {
         axios.get("http://127.0.0.1:5000/tickers").then((response) => {
             const tickerOptions = response.data["stock-tickers"].map((ticker: string) => ({
@@ -52,7 +51,6 @@ export default function PortfolioManagement() {
         });
     }, []);
 
-    // Function to handle adding a new record
     const addNewRecord = () => {
         if (selectedTicker && investedAmount) {
             setInvestedAmounts((prev) => ({
@@ -62,11 +60,18 @@ export default function PortfolioManagement() {
             setSelectedTicker(null);
             setInvestedAmount("");
         } else {
-            message.warning("لطفاً نماد را انتخاب کرده و مبلغ سرمایه‌گذاری را وارد کنید.");
+            message.warning("لطفا نماد را انتخاب کرده و مبلغ سرمایه‌گذاری را وارد کنید.");
         }
     };
 
-    // Function to handle submitting the portfolio to get results
+    const removeRecord = (ticker: string) => {
+        setInvestedAmounts((prev) => {
+            const updated = {...prev};
+            delete updated[ticker];
+            return updated;
+        });
+    };
+
     const handleSubmit = async () => {
         setLoading(true);
         try {
@@ -80,7 +85,6 @@ export default function PortfolioManagement() {
         setLoading(false);
     };
 
-    // Table columns for displaying the portfolio data
     const columns: ColumnsType<{ ticker: string; amount: number }> = [
         {
             title: "نماد",
@@ -92,16 +96,23 @@ export default function PortfolioManagement() {
             dataIndex: "amount",
             key: "amount",
         },
+        {
+            title: "عملیات",
+            key: "remove",
+            render: (record) => (
+                <Button danger onClick={() => removeRecord(record.ticker)}>
+                    حذف
+                </Button>
+            ),
+        },
     ];
 
-    // Prepare table data
     const tableData = Object.entries(investedAmounts).map(([ticker, amount]) => ({
         key: ticker,
         ticker,
         amount,
     }));
 
-    // Prepare data for the cumulative returns chart
     const cumulativeReturnsData =
         result?.cum_returns_data?.invested_cum_returns.map((_, index) => ({
             day: `روز ${index + 1}`,
@@ -110,7 +121,6 @@ export default function PortfolioManagement() {
             index: result.cum_returns_data.index_cum_returns[index],
         })) || [];
 
-    // Prepare data for the risk vs return chart
     const riskVsReturnData =
         result?.risk_vs_return_data.tickers.map((ticker, index) => ({
             ticker,
@@ -118,14 +128,12 @@ export default function PortfolioManagement() {
             risk: result.risk_vs_return_data.risks[index],
         })) || [];
 
-    // Columns for risk and return comparison table
     const riskReturnColumns = [
-        { title: "شاخص", dataIndex: "metric", key: "metric" },
-        { title: "پرتفوی اولیه", dataIndex: "initial", key: "initial" },
-        { title: "پرتفوی بهینه", dataIndex: "optimized", key: "optimized" },
+        {title: "شاخص", dataIndex: "metric", key: "metric"},
+        {title: "پرتفوی اولیه", dataIndex: "initial", key: "initial"},
+        {title: "پرتفوی بهینه", dataIndex: "optimized", key: "optimized"},
     ];
 
-    // Data for risk and return comparison table
     const riskReturnTableData = [
         {
             key: "1",
@@ -135,7 +143,7 @@ export default function PortfolioManagement() {
         },
         {
             key: "2",
-            metric: "ریسک (انحراف معیار) (%)",
+            metric: "ریسک (%)",
             initial: result?.comparison_data.initial_stddev.toFixed(2),
             optimized: result?.comparison_data.optimized_stddev.toFixed(2),
         },
@@ -147,103 +155,112 @@ export default function PortfolioManagement() {
         },
         {
             key: "4",
-            metric: "سود/زیان (اولیه)",
+            metric: "سود/زیان (تومان)",
             initial: result?.comparison_data.initial_profit_or_loss.toFixed(2),
             optimized: result?.comparison_data.optimized_profit_or_loss.toFixed(2),
         },
     ];
 
     return (
-        <div style={{ padding: "24px", fontFamily: "Tahoma", textAlign: "right" }}>
-            <h1>مدیریت پرتفوی</h1>
+        <div className={styles.container}>
+            <h1 className={styles.pageTitle}>مدیریت پرتفوی</h1>
 
-            <div style={{ marginBottom: "16px" }}>
-                {/* Select Ticker */}
+            <div className={styles.inputSection}>
                 <Select
                     showSearch
-                    style={{ width: 200, marginRight: 10 }}
+                    style={{width: 200, marginRight: 10}}
                     placeholder="انتخاب نماد"
                     options={tickers}
                     value={selectedTicker}
                     onChange={(value) => setSelectedTicker(value)}
                 />
-
-                {/* Invested Amount Input */}
                 <Input
-                    placeholder="مبلغ سرمایه‌گذاری را وارد کنید"
-                    style={{ width: 200, marginRight: 10 }}
+                    placeholder="مبلغ سرمایه‌گذاری"
+                    style={{width: 200, marginRight: 10, marginLeft: 15}}
                     value={investedAmount}
                     onChange={(e) => setInvestedAmount(e.target.value)}
                     type="number"
                 />
-
-                {/* Add Ticker Button */}
                 <Button type="primary" onClick={addNewRecord}>
                     افزودن نماد
                 </Button>
             </div>
 
-            {/* Display the table of tickers and amounts */}
+            <h3>پرتفوی سرمایه‌گذاری</h3>
             <Table
                 columns={columns}
                 dataSource={tableData}
                 pagination={false}
                 bordered
-                style={{ marginBottom: "16px" }}
+                className={styles.table}
             />
 
-            {/* Submit Button */}
-            <Button type="primary" onClick={handleSubmit} loading={loading}>
-                ثبت پرتفوی
-            </Button>
+            <div className={styles.centeredButton}>
+                <Button type="primary" onClick={handleSubmit} loading={loading}>
+                    ثبت پرتفوی
+                </Button>
+            </div>
 
-            {/* Loading Indicator */}
-            {loading && <Spin />}
+            {loading && <Spin/>}
 
-            {/* Display results */}
             {result && (
-                <div style={{ marginTop: "32px" }}>
-                    <h2>نتایج پرتفوی</h2>
+                <div className={styles.resultSection}>
+                    <h3 className={styles.pageTitle}>نمودار بازده تجمعی</h3>
+                    <div className={styles.chartWrapper}>
+                        <LineChart
+                            width={600}
+                            height={300}
+                            data={cumulativeReturnsData}
+                            margin={{top: 10, right: 30, bottom: 10, left: 40}}
+                        >
+                            <CartesianGrid strokeDasharray="3 3"/>
+                            <XAxis dataKey="day"/>
+                            <YAxis/>
+                            <Tooltip/>
+                            <Line type="monotone" dataKey="invested" stroke="#8884d8" name="سرمایه‌گذاری‌شده"/>
+                            <Line type="monotone" dataKey="optimized" stroke="#82ca9d" name="بهینه‌شده"/>
+                            <Line type="monotone" dataKey="index" stroke="#ffc658" name="شاخص"/>
+                        </LineChart>
+                    </div>
 
-                    {/* Cumulative Returns Chart */}
-                    <h3>بازده تجمعی:</h3>
-                    <LineChart
-                        width={600}
-                        height={300}
-                        data={cumulativeReturnsData}
-                        margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-                    >
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="day" />
-                        <YAxis />
-                        <Tooltip />
-                        <Line type="monotone" dataKey="invested" stroke="#8884d8" name="سرمایه‌گذاری‌شده" />
-                        <Line type="monotone" dataKey="optimized" stroke="#82ca9d" name="بهینه‌شده" />
-                        <Line type="monotone" dataKey="index" stroke="#ffc658" name="شاخص" />
-                    </LineChart>
+                    <h3 className={styles.pageTitle}>نمودار مقایسه ریسک و بازده</h3>
+                    <div className={styles.chartWrapper}>
+                        <ScatterChart
+                            width={600}
+                            height={300}
+                            margin={{top: 10, right: 30, bottom: 10, left: 40}}
+                        >
+                            <CartesianGrid/>
+                            <XAxis type="number" dataKey="risk" name="ریسک" unit="%"/>
+                            <YAxis type="number" dataKey="return" name="بازده" unit="%"/>
+                            <Tooltip
+                                cursor={{ strokeDasharray: "3 3" }}
+                                content={({ active, payload }) => {
+                                    if (active && payload && payload.length) {
+                                        const { ticker, risk, return: ret } = payload[0].payload;
+                                        return (
+                                            <div className={styles.customTooltip}>
+                                                <p className={styles.tooltipTitle}>{`نماد: ${ticker}`}</p>
+                                                <p className={styles.tooltipText}>{`ریسک: ${risk?.toFixed(2)}%`}</p>
+                                                <p className={styles.tooltipText}>{`بازده: ${ret?.toFixed(2)}%`}</p>
+                                            </div>
+                                        );
+                                    }
+                                    return null;
+                                }}
+                            />
+                            <Scatter name="نمادها" data={riskVsReturnData} fill="#8884d8" />
+                        </ScatterChart>
 
-                    {/* Risk vs Return Scatter Plot */}
-                    <h3>مقایسه ریسک و بازده:</h3>
-                    <ScatterChart
-                        width={600}
-                        height={300}
-                        margin={{ top: 20, right: 20, bottom: 20, left: 20 }}
-                    >
-                        <CartesianGrid />
-                        <XAxis type="number" dataKey="risk" name="ریسک" unit="%" />
-                        <YAxis type="number" dataKey="return" name="بازده" unit="%" />
-                        <Tooltip cursor={{ strokeDasharray: "3 3" }} />
-                        <Scatter name="نمادها" data={riskVsReturnData} fill="#8884d8" />
-                    </ScatterChart>
+                    </div>
 
-                    {/* Risk and Return Comparison Table */}
-                    <h3>جدول مقایسه ریسک و بازده:</h3>
+                    <h3 className={styles.pageTitle}>جدول مقایسه ریسک و بازده</h3>
                     <Table
                         columns={riskReturnColumns}
                         dataSource={riskReturnTableData}
                         pagination={false}
                         bordered
-                        style={{ marginBottom: "16px" }}
+                        className={styles.table}
                     />
                 </div>
             )}

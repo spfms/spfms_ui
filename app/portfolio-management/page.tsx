@@ -92,7 +92,7 @@ export default function PortfolioManagement() {
             key: "ticker",
         },
         {
-            title: "مبلغ سرمایه‌گذاری",
+            title: "مبلغ سرمایه‌گذاری (تومان)",
             dataIndex: "amount",
             key: "amount",
         },
@@ -175,7 +175,7 @@ export default function PortfolioManagement() {
                     onChange={(value) => setSelectedTicker(value)}
                 />
                 <Input
-                    placeholder="مبلغ سرمایه‌گذاری"
+                    placeholder="مبلغ سرمایه‌گذاری (تومان)"
                     style={{width: 200, marginRight: 10, marginLeft: 15}}
                     value={investedAmount}
                     onChange={(e) => setInvestedAmount(e.target.value)}
@@ -211,7 +211,7 @@ export default function PortfolioManagement() {
                             width={600}
                             height={300}
                             data={cumulativeReturnsData}
-                            margin={{top: 10, right: 30, bottom: 10, left: 40}}
+                            margin={{top: 10, right: 0, bottom: 10, left: 0}}
                         >
                             <CartesianGrid strokeDasharray="3 3"/>
                             <XAxis dataKey="day"/>
@@ -228,7 +228,7 @@ export default function PortfolioManagement() {
                         <ScatterChart
                             width={600}
                             height={300}
-                            margin={{top: 10, right: 30, bottom: 10, left: 40}}
+                            margin={{top: 10, right: 0, bottom: 10, left: 0}}
                         >
                             <CartesianGrid/>
                             <XAxis type="number" dataKey="risk" name="ریسک" unit="%"/>

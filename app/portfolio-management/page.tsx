@@ -205,7 +205,7 @@ export default function PortfolioManagement() {
 
             {result && (
                 <div className={styles.resultSection}>
-                    <h3 className={styles.pageTitle}>نمودار بازده تجمعی</h3>
+                    <h3 className={styles.pageTitle}>نمودار بازده تجمعی پرتفوی و شاخص کل</h3>
                     <div className={styles.chartWrapper}>
                         <LineChart
                             width={800}
@@ -223,7 +223,7 @@ export default function PortfolioManagement() {
                         </LineChart>
                     </div>
 
-                    <h3 className={styles.pageTitle}>نمودار مقایسه ریسک و بازده</h3>
+                    <h3 className={styles.pageTitle}>نمودار مقایسه ریسک و بازده نمادها</h3>
                     <div className={styles.chartWrapper}>
                         <ScatterChart
                             width={800}
@@ -265,7 +265,7 @@ export default function PortfolioManagement() {
                         </ScatterChart>
                     </div>
 
-                    <h3 className={styles.pageTitle}>جدول مقایسه ریسک و بازده</h3>
+                    <h3 className={styles.pageTitle}>جدول مقایسه ریسک و بازده پرتفوی</h3>
                     <Table
                         columns={riskReturnColumns}
                         dataSource={riskReturnTableData}

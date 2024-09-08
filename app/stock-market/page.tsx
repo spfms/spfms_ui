@@ -5,7 +5,7 @@ import {Gauge, GaugeConfig} from '@ant-design/charts';
 import axios from 'axios';
 import styles from './page.module.css';
 
-const { Title } = Typography;
+const {Title} = Typography;
 
 interface Forecast {
     confidence: string;
@@ -27,12 +27,12 @@ const ForecastPage: React.FC = () => {
                 const data = response.data.forecasts;
                 setForecasts(data);
 
-                const bullishData = data.filter((item: Forecast) => item.trend === 'bullish');
-                const avgConfidence = bullishData.length > 0
-                    ? bullishData.reduce((acc, item) => acc + parseFloat(item.confidence), 0) / bullishData.length
-                    : 0;
+                const bullishCount = data.filter(item => item.trend === 'bullish').length;
+                const totalCount = data.length;
 
-                setAggregatedConfidence(avgConfidence || 0);
+                const bullishPercentage = totalCount > 0 ? (bullishCount / totalCount) : 0;
+
+                setAggregatedConfidence(bullishPercentage);
             })
             .catch(error => {
                 console.error('Error fetching data:', error);

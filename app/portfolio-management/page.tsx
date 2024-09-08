@@ -208,14 +208,14 @@ export default function PortfolioManagement() {
                     <h3 className={styles.pageTitle}>نمودار بازده تجمعی</h3>
                     <div className={styles.chartWrapper}>
                         <LineChart
-                            width={600}
-                            height={300}
+                            width={800}
+                            height={400}
                             data={cumulativeReturnsData}
-                            margin={{top: 10, right: 0, bottom: 10, left: 0}}
+                            margin={{top: 10, right: 30, bottom: 40, left: 40}}
                         >
                             <CartesianGrid strokeDasharray="3 3"/>
                             <XAxis dataKey="day"/>
-                            <YAxis/>
+                            <YAxis label={{value: 'بازده تجمعی (%)', angle: -90, position: 'insideLeft', offset: -5}}/>
                             <Tooltip/>
                             <Line type="monotone" dataKey="invested" stroke="#8884d8" name="سرمایه‌گذاری‌شده"/>
                             <Line type="monotone" dataKey="optimized" stroke="#82ca9d" name="بهینه‌شده"/>
@@ -226,18 +226,30 @@ export default function PortfolioManagement() {
                     <h3 className={styles.pageTitle}>نمودار مقایسه ریسک و بازده</h3>
                     <div className={styles.chartWrapper}>
                         <ScatterChart
-                            width={600}
-                            height={300}
-                            margin={{top: 10, right: 0, bottom: 10, left: 0}}
+                            width={800}
+                            height={400}
+                            margin={{top: 10, right: 30, bottom: 40, left: 40}}
                         >
                             <CartesianGrid/>
-                            <XAxis type="number" dataKey="risk" name="ریسک" unit="%"/>
-                            <YAxis type="number" dataKey="return" name="بازده" unit="%"/>
+                            <XAxis
+                                type="number"
+                                dataKey="risk"
+                                name="ریسک"
+                                unit="%"
+                                label={{value: 'ریسک', position: 'insideBottom', offset: -20}}
+                            />
+                            <YAxis
+                                type="number"
+                                dataKey="return"
+                                name="بازده"
+                                unit="%"
+                                label={{value: 'بازده', angle: -90, position: 'insideLeft', offset: -20}}
+                            />
                             <Tooltip
-                                cursor={{ strokeDasharray: "3 3" }}
-                                content={({ active, payload }) => {
+                                cursor={{strokeDasharray: "3 3"}}
+                                content={({active, payload}) => {
                                     if (active && payload && payload.length) {
-                                        const { ticker, risk, return: ret } = payload[0].payload;
+                                        const {ticker, risk, return: ret} = payload[0].payload;
                                         return (
                                             <div className={styles.customTooltip}>
                                                 <p className={styles.tooltipTitle}>{`نماد: ${ticker}`}</p>
@@ -249,9 +261,8 @@ export default function PortfolioManagement() {
                                     return null;
                                 }}
                             />
-                            <Scatter name="نمادها" data={riskVsReturnData} fill="#8884d8" />
+                            <Scatter name="نمادها" data={riskVsReturnData} fill="#8884d8"/>
                         </ScatterChart>
-
                     </div>
 
                     <h3 className={styles.pageTitle}>جدول مقایسه ریسک و بازده</h3>

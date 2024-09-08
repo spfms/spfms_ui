@@ -31,6 +31,9 @@ interface PortfolioResultType {
         returns: number[];
         risks: number[];
     };
+    optimized_portfolio: {
+        [key: string]: number;
+    };
 }
 
 export default function PortfolioManagement() {
@@ -112,6 +115,49 @@ export default function PortfolioManagement() {
         ticker,
         amount,
     }));
+
+    const optimizationTableData = result?.risk_vs_return_data.tickers.map((ticker, index) => ({
+        key: ticker,
+        ticker,
+        oldAmount: investedAmounts[ticker],
+        optimizedAmount: Number(result.optimized_portfolio[ticker].toFixed(0)),
+        risk: Number(result.risk_vs_return_data.risks[index].toFixed(2)),
+        return: Number(result.risk_vs_return_data.returns[index].toFixed(2)),
+    })) || [];
+
+    const optimizationColumns: ColumnsType<{
+        ticker: string;
+        oldAmount: number;
+        optimizedAmount: number;
+        risk: number;
+        return: number
+    }> = [
+        {
+            title: "نماد",
+            dataIndex: "ticker",
+            key: "ticker",
+        },
+        {
+            title: "مبلغ اولیه (تومان)",
+            dataIndex: "oldAmount",
+            key: "oldAmount",
+        },
+        {
+            title: "مبلغ بهینه‌شده (تومان)",
+            dataIndex: "optimizedAmount",
+            key: "optimizedAmount",
+        },
+        {
+            title: "ریسک (%)",
+            dataIndex: "risk",
+            key: "risk",
+        },
+        {
+            title: "بازده (%)",
+            dataIndex: "return",
+            key: "return",
+        },
+    ];
 
     const cumulativeReturnsData =
         result?.cum_returns_data?.invested_cum_returns.map((_, index) => ({
@@ -205,10 +251,20 @@ export default function PortfolioManagement() {
 
             {result && (
                 <div className={styles.resultSection}>
-                    <h3 className={styles.pageTitle}>نمودار بازده تجمعی پرتفوی و شاخص کل</h3>
+
+                    <h3 className={styles.pageTitle}>پرتفوی پیشنهادی</h3>
+                    <Table
+                        columns={optimizationColumns}
+                        dataSource={optimizationTableData}
+                        pagination={false}
+                        bordered
+                        className={styles.table}
+                    />
+
+                    <h3 className={styles.pageTitle}>بازده تجمعی پرتفوی و شاخص کل</h3>
                     <div className={styles.chartWrapper}>
                         <LineChart
-                            width={800}
+                            width={700}
                             height={400}
                             data={cumulativeReturnsData}
                             margin={{top: 10, right: 30, bottom: 40, left: 40}}
@@ -223,10 +279,10 @@ export default function PortfolioManagement() {
                         </LineChart>
                     </div>
 
-                    <h3 className={styles.pageTitle}>نمودار مقایسه ریسک و بازده نمادها</h3>
+                    <h3 className={styles.pageTitle}>مقایسه ریسک و بازده نمادها</h3>
                     <div className={styles.chartWrapper}>
                         <ScatterChart
-                            width={800}
+                            width={700}
                             height={400}
                             margin={{top: 10, right: 30, bottom: 40, left: 40}}
                         >
@@ -265,7 +321,7 @@ export default function PortfolioManagement() {
                         </ScatterChart>
                     </div>
 
-                    <h3 className={styles.pageTitle}>جدول مقایسه ریسک و بازده پرتفوی</h3>
+                    <h3 className={styles.pageTitle}>مقایسه ریسک و بازده پرتفوی</h3>
                     <Table
                         columns={riskReturnColumns}
                         dataSource={riskReturnTableData}

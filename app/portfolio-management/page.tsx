@@ -18,8 +18,6 @@ interface PortfolioResultType {
         optimized_stddev: number;
         initial_sharpe: number;
         optimized_sharpe: number;
-        initial_profit_or_loss: number;
-        optimized_profit_or_loss: number;
     };
     cum_returns_data: {
         invested_cum_returns: number[];
@@ -121,16 +119,12 @@ export default function PortfolioManagement() {
         ticker,
         oldAmount: investedAmounts[ticker],
         optimizedAmount: Number(result.optimized_portfolio[ticker].toFixed(0)),
-        risk: Number(result.risk_vs_return_data.risks[index].toFixed(2)),
-        return: Number(result.risk_vs_return_data.returns[index].toFixed(2)),
     })) || [];
 
     const optimizationColumns: ColumnsType<{
         ticker: string;
         oldAmount: number;
         optimizedAmount: number;
-        risk: number;
-        return: number
     }> = [
         {
             title: "نماد",
@@ -146,16 +140,6 @@ export default function PortfolioManagement() {
             title: "مبلغ بهینه‌شده (تومان)",
             dataIndex: "optimizedAmount",
             key: "optimizedAmount",
-        },
-        {
-            title: "ریسک (%)",
-            dataIndex: "risk",
-            key: "risk",
-        },
-        {
-            title: "بازده (%)",
-            dataIndex: "return",
-            key: "return",
         },
     ];
 
@@ -183,7 +167,7 @@ export default function PortfolioManagement() {
     const riskReturnTableData = [
         {
             key: "1",
-            metric: "بازدهی (%)",
+            metric: "میانگین بازدهی روزانه (%)",
             initial: result?.comparison_data.initial_return.toFixed(2),
             optimized: result?.comparison_data.optimized_return.toFixed(2),
         },
@@ -198,13 +182,7 @@ export default function PortfolioManagement() {
             metric: "نسبت شارپ",
             initial: result?.comparison_data.initial_sharpe.toFixed(2),
             optimized: result?.comparison_data.optimized_sharpe.toFixed(2),
-        },
-        {
-            key: "4",
-            metric: "سود/زیان (تومان)",
-            initial: result?.comparison_data.initial_profit_or_loss.toFixed(2),
-            optimized: result?.comparison_data.optimized_profit_or_loss.toFixed(2),
-        },
+        }
     ];
 
     return (
@@ -299,7 +277,12 @@ export default function PortfolioManagement() {
                                 dataKey="return"
                                 name="بازده"
                                 unit="%"
-                                label={{value: 'بازده', angle: -90, position: 'insideLeft', offset: -20}}
+                                label={{
+                                    value: 'میانگین بازدهی روزانه',
+                                    angle: -90,
+                                    position: 'insideLeft',
+                                    offset: -20
+                                }}
                             />
                             <Tooltip
                                 cursor={{strokeDasharray: "3 3"}}
@@ -310,7 +293,7 @@ export default function PortfolioManagement() {
                                             <div className={styles.customTooltip}>
                                                 <p className={styles.tooltipTitle}>{`نماد: ${ticker}`}</p>
                                                 <p className={styles.tooltipText}>{`ریسک: ${risk?.toFixed(2)}%`}</p>
-                                                <p className={styles.tooltipText}>{`بازده: ${ret?.toFixed(2)}%`}</p>
+                                                <p className={styles.tooltipText}>{`میانگین بازدهی روزانه: ${ret?.toFixed(2)}%`}</p>
                                             </div>
                                         );
                                     }
